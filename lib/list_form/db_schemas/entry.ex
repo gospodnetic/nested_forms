@@ -1,7 +1,6 @@
 defmodule ListForm.DbSchemas.Entry do
   use Ecto.Schema
   import Ecto.Changeset
-  import Logger
 
   schema "entries" do
     field :name, :string
@@ -10,11 +9,8 @@ defmodule ListForm.DbSchemas.Entry do
   end
 
   def changeset(entry, attrs \\ %{}) do
-    debug("ENTRY CHANGESET attrs: #{inspect(attrs)}")
-
     entry
     |> cast(attrs, [:name, :animal])
     |> validate_required([:name, :animal])
-    |> IO.inspect()
   end
 end
