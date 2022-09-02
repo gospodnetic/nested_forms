@@ -25,18 +25,12 @@ defmodule ListFormWeb.IndexLive do
         entries: entries
       })
 
-    {_reply, changeset} = Changeset.apply_action(changeset, :insert)
-    debug(inspect(changeset))
-    {:noreply, assign(socket, changeset: changeset)}
+    {:noreply, assign(socket, changeset: %{changeset | action: :insert})}
   end
 
   def handle_event("add_entry", _, socket) do
-    vars = Map.get(socket.assigns.changeset.changes, :entries)
-
-    debug("ADD ENTRY: #{inspect(vars)}")
-
     entries =
-      vars
+      Map.get(socket.assigns.changeset.changes, :entries)
       |> Enum.concat([
         Entry.changeset(%Entry{})
       ])
@@ -45,7 +39,19 @@ defmodule ListFormWeb.IndexLive do
       socket.assigns.changeset
       |> Changeset.put_assoc(:entries, entries)
 
-    {_reply, changeset} = Changeset.apply_action(changeset, :insert)
+    {:noreply, assign(socket, changeset: %{changeset | action: :insert})}
+  end
+
+  def handle_event("cancel_upload", %{"idx" => idx}, socket) do
+    {idx, ""} = Integer.parse(idx)
+
+    entries =
+      Map.get(socket.assigns.changeset.changes, :entries)
+      |> List.delete_at(idx)
+
+    changeset =
+      socket.assigns.changeset
+      |> Changeset.put_assoc(:entries, entries)
 
     {:noreply, assign(socket, changeset: changeset)}
   end
@@ -58,7 +64,7 @@ defmodule ListFormWeb.IndexLive do
         Give all your pets a shoutout!
         <.form let={f} for={@changeset} phx-change="validate" phx-submit="submit">
           <%= inputs_for f, :entries, fn v -> %>
-            <div style="border: 1px solid #ccc; margin-top: 1rem; padding: 0.5rem;">
+            <div style="border: 1px solid #ccc; margin-top: 1rem; padding: 0.5rem; position: relative;">
               <div style="width: 40%; display: inline-block; vertical-align: top">
                 <%= label v, :name %>
                 <%= text_input v, :name, class: "form-control", phx_debounce: 1000 %>
@@ -70,6 +76,7 @@ defmodule ListFormWeb.IndexLive do
                 <%= text_input v, :animal, class: "form-control", phx_debounce: 1000 %>
                 <%= error_tag v, :animal %>
               </div>
+              <button type="button" phx-click="cancel_upload" phx-value-idx={v.index} style="position: absolute; top: 0; right: 0; border-radius: 0;">&times;</button>
             </div>
           <% end %>
         </.form>
