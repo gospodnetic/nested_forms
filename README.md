@@ -2,7 +2,7 @@
 
 An example on how to build a form with multiple entries using nested forms but without having a parent schema stored in the database.
 
-
+![image](https://user-images.githubusercontent.com/15703361/188231257-3838d58b-a926-4429-bd48-b5861072c994.png)
 
 To start your Phoenix server:
 
