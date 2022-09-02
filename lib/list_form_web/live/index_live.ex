@@ -5,6 +5,7 @@ defmodule ListFormWeb.IndexLive do
 
   alias Ecto.Changeset
   alias ListForm.DbSchemas.{Upload, Entry}
+  alias ListForm.Repo
 
   @impl true
   def mount(_params, _session, socket) do
@@ -56,18 +57,32 @@ defmodule ListFormWeb.IndexLive do
     {:noreply, assign(socket, changeset: changeset)}
   end
 
+  def handle_event("submit", _params, socket) do
+    changesets = socket.assigns.changeset.changes.entries
+
+    Enum.each(changesets, &ListForm.Repo.insert!(&1, []))
+
+    changeset =
+      Upload.changeset(%Upload{}, %{
+        entries: []
+      })
+
+    {:noreply, assign(socket, changeset: changeset)}
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
       <div class="container">
       <h1>List Form</h1>
-        Give all your pets a shoutout!
+        <p>Give all your pets a shoutout!</p>
+        <button phx-click="add_entry">Add a pet</button>
         <.form let={f} for={@changeset} phx-change="validate" phx-submit="submit">
           <%= inputs_for f, :entries, fn v -> %>
             <div style="border: 1px solid #ccc; margin-top: 1rem; padding: 0.5rem; position: relative;">
               <div style="width: 40%; display: inline-block; vertical-align: top">
                 <%= label v, :name %>
-                <%= text_input v, :name, class: "form-control", phx_debounce: 1000 %>
+                <%= text_input v, :name, class: "form-control", phx_debounce: 200 %>
                 <%= error_tag v, :name %>
               </div>
 
@@ -79,8 +94,8 @@ defmodule ListFormWeb.IndexLive do
               <button type="button" phx-click="cancel_upload" phx-value-idx={v.index} style="position: absolute; top: 0; right: 0; border-radius: 0;">&times;</button>
             </div>
           <% end %>
+        <button>Submit</button>
         </.form>
-        <button phx-click="add_entry">Add a pet</button>
       </div>
     """
   end

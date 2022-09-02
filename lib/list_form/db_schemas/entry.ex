@@ -5,7 +5,7 @@ defmodule ListForm.DbSchemas.Entry do
   schema "entries" do
     field :name, :string
     field :animal, :string
-    belongs_to :upload, ListForm.DbSchemas.Upload
+    # belongs_to :upload, ListForm.DbSchemas.Upload
   end
 
   def changeset(entry, attrs \\ %{}) do
