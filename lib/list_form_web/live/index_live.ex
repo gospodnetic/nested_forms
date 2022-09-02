@@ -3,37 +3,31 @@ defmodule ListFormWeb.IndexLive do
 
   import Logger
 
+  alias Ecto.Changeset
   alias ListForm.DbSchemas.{Upload, Entry}
 
   @impl true
   def mount(_params, _session, socket) do
     changeset =
       Upload.changeset(%Upload{}, %{
-        entries: [
-          %{name: "name", animal: "animal"},
-          %{name: "name", animal: "animal"},
-          %{name: "name", animal: "animal"}
-        ]
+        entries: []
       })
 
     {:ok, assign(socket, changeset: changeset)}
   end
 
   @impl true
-  def handle_event("validate", %{"upload" => %{"animal" => animal, "name" => name}}, socket) do
-    debug("name: #{name}, animal: #{animal}")
+  def handle_event("validate", %{"upload" => %{"entries" => entries}}, socket) do
+    debug("entries: #{inspect(entries)}")
 
     changeset =
       Upload.changeset(%Upload{}, %{
-        entries: [
-          %{name: name, animal: animal},
-          %{name: name, animal: animal},
-          %{name: name, animal: animal}
-        ]
+        entries: entries
       })
 
+    {_reply, changeset} = Changeset.apply_action(changeset, :insert)
     debug(inspect(changeset))
-    {:noreply, socket}
+    {:noreply, assign(socket, changeset: changeset)}
   end
 
   def handle_event("add_entry", _, socket) do
@@ -49,7 +43,9 @@ defmodule ListFormWeb.IndexLive do
 
     changeset =
       socket.assigns.changeset
-      |> Ecto.Changeset.put_assoc(:entries, entries)
+      |> Changeset.put_assoc(:entries, entries)
+
+    {_reply, changeset} = Changeset.apply_action(changeset, :insert)
 
     {:noreply, assign(socket, changeset: changeset)}
   end
@@ -57,32 +53,27 @@ defmodule ListFormWeb.IndexLive do
   @impl true
   def render(assigns) do
     ~H"""
-      <div class="container p-0">
+      <div class="container">
       <h1>List Form</h1>
-
+        Give all your pets a shoutout!
         <.form let={f} for={@changeset} phx-change="validate" phx-submit="submit">
-          <%= label f, :name %>
-          <%= text_input f, :name, phx_debounce: 1000 %>
-          <%= label f, :animal %>
-          <%= text_input f, :animal %>
-
           <%= inputs_for f, :entries, fn v -> %>
-            <div class="flex flex-wrap -mx-1 overflow-hidden">
-              <div class="form-group px-1 w-3/6">
+            <div style="border: 1px solid #ccc; margin-top: 1rem; padding: 0.5rem;">
+              <div style="width: 40%; display: inline-block; vertical-align: top">
                 <%= label v, :name %>
-                <%= text_input v, :name, class: "form-control" %>
+                <%= text_input v, :name, class: "form-control", phx_debounce: 1000 %>
                 <%= error_tag v, :name %>
               </div>
 
-              <div class="form-group px-1 w-2/6">
+              <div style="width: 40%; display: inline-block">
                 <%= label v, :animal %>
-                <%= text_input v, :animal, class: "form-control" %>
+                <%= text_input v, :animal, class: "form-control", phx_debounce: 1000 %>
                 <%= error_tag v, :animal %>
               </div>
             </div>
           <% end %>
         </.form>
-        <button phx-click="add_entry">Add entry</button>
+        <button phx-click="add_entry">Add a pet</button>
       </div>
     """
   end
